@@ -22,12 +22,12 @@ class WhisperCog(dc.ext.commands.Cog):
         channel = self.bot.get_channel(1397636825971032095)
         if channel is None:
             channel = await self.bot.fetch_channel(1397636825971032095)
-        await channel.send("```" + f"Anonym: {message}" + "```")
+        await channel.send(" \n" + "**ANONYM **" + message)
         with open("whisper_clients.txt", "r", encoding="utf-8") as clients:
             self.clients = [line.strip() for line in clients]
         for client in self.clients:
             channel = await self.bot.fetch_user(int(client))
-            await channel.send("```" + f"Anonym: {message}" + "```")
+            await channel.send(" \n" + "**ANONYM **" + message)
         await interaction.delete_original_response()
 
     @app_commands.command(
@@ -37,10 +37,10 @@ class WhisperCog(dc.ext.commands.Cog):
     async def sign_up(self, interaction: dc.Interaction):
         '''register user as client for private messaging'''
         await interaction.response.defer(ephemeral=True)
-        
+
         with open("whisper_clients.txt", "r", encoding="utf-8") as clients:
             self.clients = [line.strip() for line in clients]
-        
+
         if str(interaction.user.id) in self.clients:
             await interaction.channel.send("Du bist schon registriert")
         else:
@@ -60,7 +60,7 @@ class WhisperCog(dc.ext.commands.Cog):
 
         with open("whisper_clients.txt", "r", encoding="utf-8") as clients:
             self.clients = [line.strip() for line in clients]
-        
+
         if str(interaction.user.id) in self.clients:
             # check if client is signed up for message forwarding
             # if so delete them from the register
