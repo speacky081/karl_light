@@ -22,12 +22,12 @@ class WhisperCog(dc.ext.commands.Cog):
         channel = self.bot.get_channel(1397636825971032095)
         if channel is None:
             channel = await self.bot.fetch_channel(1397636825971032095)
-        await channel.send(" \n" + "**ANONYM **" + message)
+        await channel.send(" \n" + "**ANONYM  **" + message)
         with open("whisper_clients.txt", "r", encoding="utf-8") as clients:
             self.clients = [line.strip() for line in clients]
         for client in self.clients:
             channel = await self.bot.fetch_user(int(client))
-            await channel.send(" \n" + "**ANONYM **" + message)
+            await channel.send(" \n" + "**ANONYM  **" + message)
         await interaction.delete_original_response()
 
     @app_commands.command(
