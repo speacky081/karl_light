@@ -3,3 +3,6 @@ ADMINID.txt
 TOKEN.txt
 whisper_clients.txt
 /ugame/*.json
+/TCG_images/*
+tcg.db
+test_bot.py
