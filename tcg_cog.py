@@ -291,12 +291,20 @@ class ShopView(dc.ui.View,):
     Buttons check if the user has enough money to buy the pack
     '''
 
+    def __init__(self, owner_id: int, *, timeout: float = 180):
+        super().__init__(timeout=timeout)
+        self.owner_id = owner_id
+
     @dc.ui.button(label="normal", style=dc.ButtonStyle.secondary, emoji="⬜")
     async def normal_button_callback(self, interaction: dc.Interaction, button):
         '''generate a normal booster pack'''
         for b in self.children:
             b.disabled = True
         await interaction.response.edit_message(view=self)
+
+        if interaction.user.id != self.owner_id:
+            await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
+            return
 
         steps = random.randint(8,12)
 
@@ -360,6 +368,10 @@ class ShopView(dc.ui.View,):
             b.disabled = True
         await interaction.response.edit_message(view=self)
 
+        if interaction.user.id != self.owner_id:
+            await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
+            return
+
         steps = random.randint(8,12)
 
         # make the indicator for the roulette wheel
@@ -419,6 +431,10 @@ class ShopView(dc.ui.View,):
         for b in self.children:
             b.disabled = True
         await interaction.response.edit_message(view=self)
+
+        if interaction.user.id != self.owner_id:
+            await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
+            return
 
         steps = random.randint(8,12)
 
@@ -628,7 +644,7 @@ class Tcg(dc.ext.commands.Cog):
     )
     async def shop(self, interaction: dc.Interaction):
         '''display a shop embed with buttons to user to enable them to buy cards'''
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
 
         user_id = interaction.user.id
 
@@ -640,7 +656,7 @@ class Tcg(dc.ext.commands.Cog):
         player_tokens = row[0] if row else 0
         cur.close()
 
-        view = ShopView()
+        view = ShopView(user_id)
 
         for btn in view.children:
             if btn.label == "normal" and player_tokens < 1:
@@ -655,7 +671,7 @@ class Tcg(dc.ext.commands.Cog):
             description=f"Deine Token: `{player_tokens}`",
             color=dc.Color.blurple()
         )
-        await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+        await interaction.followup.send(embed=embed, view=view)
 
     @tcg.command(
         name="inventar",
@@ -663,7 +679,7 @@ class Tcg(dc.ext.commands.Cog):
     )
     async def inventory(self, interaction: dc.Interaction):
         '''send a string with most important properties of cards'''
-        await interaction.response.defer(ephemeral=True)
+        # await interaction.response.defer(ephemeral=True) probably not needed
 
         rarity_translation = {
             1: "Normal :star:",
