@@ -298,10 +298,11 @@ class ShopView(dc.ui.View,):
     @dc.ui.button(label="normal", style=dc.ButtonStyle.secondary, emoji="⬜")
     async def normal_button_callback(self, interaction: dc.Interaction, button):
         '''generate a normal booster pack'''
+        await interaction.response.defer()
         if interaction.user.id != self.owner_id:
             await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
             return
-        
+
         for b in self.children:
             b.disabled = True
         await interaction.response.edit_message(view=self)
@@ -364,6 +365,7 @@ class ShopView(dc.ui.View,):
     @dc.ui.button(label="ungewöhnlich", style=dc.ButtonStyle.secondary, emoji="🟩")
     async def uncommon_button_callback(self, interaction: dc.Interaction, button):
         '''generate an uncommon booster pack'''
+        await interaction.response.defer()
         if interaction.user.id != self.owner_id:
             await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
             return
@@ -428,6 +430,7 @@ class ShopView(dc.ui.View,):
     @dc.ui.button(label="selten", style=dc.ButtonStyle.secondary, emoji="🟦")
     async def rare_button_callback(self, interaction: dc.Interaction, button):
         '''generate a rare booster pack'''
+        await interaction.response.defer()
         if interaction.user.id != self.owner_id:
             await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
             return
