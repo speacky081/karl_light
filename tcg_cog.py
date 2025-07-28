@@ -321,6 +321,8 @@ class ShopView(dc.ui.View,):
 
         ticker_msg = await interaction.followup.send(ticker, wait=True)
 
+        charge_user(interaction.user.id, 1)
+
         #now make the actual roulette wheel
         roulette_list = []
         # wheel will be a list of numbers but translated as colors for dc
@@ -355,13 +357,10 @@ class ShopView(dc.ui.View,):
             await asyncio.sleep((j**2)/64)
 
         rarity = roulette_list[5]
-
         ucid = create_card(rarity)
         assign_card_to_player(ucid, interaction.user.id)
         card = read_card_from_db(ucid)
         embed, dc_file = create_embed(card)
-        charge_user(interaction.user.id, 1)
-
         await interaction.followup.send(embed=embed, file=dc_file)
 
     @dc.ui.button(label="ungewöhnlich", style=dc.ButtonStyle.secondary, emoji="🟩")
@@ -388,6 +387,8 @@ class ShopView(dc.ui.View,):
             ticker += ":green_square:"
 
         ticker_msg = await interaction.followup.send(ticker, wait=True)
+
+        charge_user(interaction.user.id, 3)
 
         #now make the actual roulette wheel
         roulette_list = []
@@ -421,13 +422,10 @@ class ShopView(dc.ui.View,):
             await asyncio.sleep((j**2)/64)
 
         rarity = roulette_list[5]
-
         ucid = create_card(rarity)
         assign_card_to_player(ucid, interaction.user.id)
         card = read_card_from_db(ucid)
         embed, dc_file = create_embed(card)
-        charge_user(interaction.user.id, 3)
-
         await interaction.followup.send(embed=embed, file=dc_file)
 
     @dc.ui.button(label="selten", style=dc.ButtonStyle.secondary, emoji="🟦")
@@ -454,6 +452,8 @@ class ShopView(dc.ui.View,):
             ticker += ":blue_square:"
 
         ticker_msg = await interaction.followup.send(ticker, wait=True)
+
+        charge_user(interaction.user.id, 5)
 
         #now make the actual roulette wheel
         roulette_list = []
@@ -485,13 +485,10 @@ class ShopView(dc.ui.View,):
             await asyncio.sleep((j**2)/64)
 
         rarity = roulette_list[5]
-
         ucid = create_card(rarity)
         assign_card_to_player(ucid, interaction.user.id)
         card = read_card_from_db(ucid)
         embed, dc_file = create_embed(card)
-        charge_user(interaction.user.id, 5)
-
         await interaction.followup.send(embed=embed, file=dc_file)
 
 class Tcg(dc.ext.commands.Cog):
