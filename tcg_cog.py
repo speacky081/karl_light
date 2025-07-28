@@ -680,7 +680,7 @@ class Tcg(dc.ext.commands.Cog):
     async def inventory(self, interaction: dc.Interaction):
         '''send a string with most important properties of cards'''
         await interaction.response.defer()
-        
+
         rarity_translation = {
             1: "Normal :star:",
             2: "Ungewöhnlich :star::star:",
@@ -712,11 +712,8 @@ class Tcg(dc.ext.commands.Cog):
         name="show",
         description="gib eine ID einer deiner Karten an um sie dir anzeigen zu lassen"
     )
-    async def show(self, interaction: dc.Interaction, ucid_str: str):
+    async def show(self, interaction: dc.Interaction, ucid_str: int):
         '''Let the user display one of their cards'''
-        if not ucid_str.isdecimal():
-            await interaction.response.send_message("Das ist keine gültige ID", ephemeral=True)
-            return
 
         ucid = int(ucid_str)
         user_id = interaction.user.id
