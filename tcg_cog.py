@@ -299,13 +299,14 @@ class ShopView(dc.ui.View,):
     async def normal_button_callback(self, interaction: dc.Interaction, button):
         '''generate a normal booster pack'''
         await interaction.response.defer()
+
         if interaction.user.id != self.owner_id:
             await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
             return
 
         for b in self.children:
             b.disabled = True
-        await interaction.response.edit_message(view=self)
+        await interaction.message.edit(view=self)
 
         steps = random.randint(8,12)
 
@@ -372,7 +373,7 @@ class ShopView(dc.ui.View,):
 
         for b in self.children:
             b.disabled = True
-        await interaction.response.edit_message(view=self)
+        await interaction.message.edit(view=self)
 
         steps = random.randint(8,12)
 
@@ -437,7 +438,7 @@ class ShopView(dc.ui.View,):
 
         for b in self.children:
             b.disabled = True
-        await interaction.response.edit_message(view=self)
+        await interaction.message.edit(view=self)
 
         steps = random.randint(8,12)
 
