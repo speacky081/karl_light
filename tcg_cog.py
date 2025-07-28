@@ -717,10 +717,16 @@ class Tcg(dc.ext.commands.Cog):
         name="show",
         description="gib eine ID einer deiner Karten an um sie dir anzeigen zu lassen"
     )
-    async def show(self, interaction: dc.Interaction, ucid_str: int):
+    async def show(self, interaction: dc.Interaction, ucid_str: str):
         '''Let the user display one of their cards'''
 
-        ucid = int(ucid_str)
+        try:
+            ucid = int(ucid_str)
+        except ValueError:
+            return await interaction.response.send_message(
+                "Bitte gib eine gültige ganze Zahl an.", 
+                ephemeral=True
+            )
         user_id = interaction.user.id
 
         con = sqlite3.connect("tcg.db")
