@@ -524,8 +524,8 @@ class Tcg(dc.ext.commands.Cog):
         if not interaction.user.id == ADMINID:
             await interaction.response.send_message("Du hast nicht die Rechte diesen Befehl auszuführen!", ephemeral=True)
             return
-        if len(name) > 30:
-            await interaction.response.send_message("Der Name ist zu lang (max: 30)", ephemeral=True)
+        if len(name) > 50:
+            await interaction.response.send_message("Der Name ist zu lang (max: 50)", ephemeral=True)
             return
         if len(name) < 3:
             await interaction.response.send_message("Der Name ist zu kurz (min: 2)", ephemeral=True)
