@@ -319,7 +319,7 @@ class ShopView(dc.ui.View,):
         for _ in range(5):
             ticker += ":white_large_square:"
 
-        await interaction.followup.send(ticker)
+        ticker_msg = await interaction.followup.send(ticker, wait=True)
 
         #now make the actual roulette wheel
         roulette_list = []
@@ -345,12 +345,13 @@ class ShopView(dc.ui.View,):
                 roulette_list.append(5)
 
         #send roulette wheel and update it steps # of times
-        wheel_msg = await interaction.followup.send(content="".join(translations[i] for i in roulette_list), wait=True)
+        wheel_str = "".join(translations[i] for i in roulette_list)
+        await ticker_msg.edit(content=ticker + "\n" + wheel_str)
         for j in range(steps):
             first = roulette_list.pop(0)
             roulette_list.append(first)
             wheel_str = "".join(translations[i] for i in roulette_list)
-            await interaction.followup.edit_message(wheel_msg.id, content=wheel_str)
+            await ticker_msg.edit(content=ticker + "\n" + wheel_str)
             await asyncio.sleep((j**2)/64)
 
         rarity = roulette_list[5]
@@ -386,7 +387,7 @@ class ShopView(dc.ui.View,):
         for _ in range(5):
             ticker += ":green_square:"
 
-        await interaction.followup.send(ticker)
+        ticker_msg = await interaction.followup.send(ticker, wait=True)
 
         #now make the actual roulette wheel
         roulette_list = []
@@ -410,12 +411,13 @@ class ShopView(dc.ui.View,):
                 roulette_list.append(5)
 
         #send roulette wheel and update it steps # of times
-        wheel_msg = await interaction.followup.send(content="".join(translations[i] for i in roulette_list), wait=True)
+        wheel_str = "".join(translations[i] for i in roulette_list)
+        await ticker_msg.edit(content=ticker + "\n" + wheel_str)
         for j in range(steps):
             first = roulette_list.pop(0)
             roulette_list.append(first)
             wheel_str = "".join(translations[i] for i in roulette_list)
-            await interaction.followup.edit_message(wheel_msg.id, content=wheel_str)
+            await ticker_msg.edit(content=ticker + "\n" + wheel_str)
             await asyncio.sleep((j**2)/64)
 
         rarity = roulette_list[5]
@@ -451,7 +453,7 @@ class ShopView(dc.ui.View,):
         for _ in range(5):
             ticker += ":blue_square:"
 
-        await interaction.followup.send(ticker)
+        ticker_msg = await interaction.followup.send(ticker, wait=True)
 
         #now make the actual roulette wheel
         roulette_list = []
@@ -473,12 +475,13 @@ class ShopView(dc.ui.View,):
                 roulette_list.append(5)
 
         #send roulette wheel and update it steps # of times
-        wheel_msg = await interaction.followup.send(content="".join(translations[i] for i in roulette_list), wait=True)
+        wheel_str = "".join(translations[i] for i in roulette_list)
+        await ticker_msg.edit(content=ticker + "\n" + wheel_str)
         for j in range(steps):
             first = roulette_list.pop(0)
             roulette_list.append(first)
             wheel_str = "".join(translations[i] for i in roulette_list)
-            await interaction.followup.edit_message(wheel_msg.id, content=wheel_str)
+            await ticker_msg.edit(content=ticker + "\n" + wheel_str)
             await asyncio.sleep((j**2)/64)
 
         rarity = roulette_list[5]
