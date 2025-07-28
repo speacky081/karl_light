@@ -774,10 +774,17 @@ class Tcg(dc.ext.commands.Cog):
         name="trade",
         description="Gib jemandem eine deiner Karten"
     )
-    async def trade(self, interaction: dc.Interaction, ucid_str: int, target: dc.User):
+    async def trade(self, interaction: dc.Interaction, ucid_str: str, target: dc.User):
         '''Let a player give someone else one of their cards'''
 
-        ucid = int(ucid_str)
+        try:
+            ucid = int(ucid_str)
+        except ValueError:
+            return await interaction.response.send_message(
+                "Bitte gib eine gültige ganze Zahl an.", 
+                ephemeral=True
+            )
+
         user_id = interaction.user.id
         target_id = target.id
         if target_id == user_id:
