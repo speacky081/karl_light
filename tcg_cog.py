@@ -679,8 +679,8 @@ class Tcg(dc.ext.commands.Cog):
     )
     async def inventory(self, interaction: dc.Interaction):
         '''send a string with most important properties of cards'''
-        # await interaction.response.defer(ephemeral=True) probably not needed
-
+        await interaction.response.defer()
+        
         rarity_translation = {
             1: "Normal :star:",
             2: "Ungewöhnlich :star::star:",
