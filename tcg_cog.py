@@ -321,8 +321,6 @@ class ShopView(dc.ui.View,):
 
         ticker_msg = await interaction.followup.send(ticker, wait=True)
 
-        charge_user(interaction.user.id, 1)
-
         #now make the actual roulette wheel
         roulette_list = []
         # wheel will be a list of numbers but translated as colors for dc
@@ -335,25 +333,26 @@ class ShopView(dc.ui.View,):
         }
         for _ in range(11):
             rarity = random.randint(1, 100)
-            if rarity < 70:
+            if rarity <= 80:
                 roulette_list.append(1)
-            elif rarity < 85:
+            elif rarity <= 94:
                 roulette_list.append(2)
-            elif rarity < 95:
+            elif rarity <= 99:
                 roulette_list.append(3)
-            elif rarity < 98:
+            elif rarity <= 100:
                 roulette_list.append(4)
-            else:
-                roulette_list.append(5)
 
         #send roulette wheel and update it steps # of times
         wheel_str = "".join(translations[i] for i in roulette_list)
         await ticker_msg.edit(content=ticker + "\n" + wheel_str)
+        
+        charge_user(interaction.user.id, 1)
+
         for j in range(steps):
             first = roulette_list.pop(0)
             roulette_list.append(first)
             wheel_str = "".join(translations[i] for i in roulette_list)
-            await ticker_msg.edit(content=ticker + "\n" + wheel_str)
+            await ticker_msg.edit(content=" \n" + ticker + "\n" + wheel_str)
             await asyncio.sleep((j**2)/64)
 
         rarity = roulette_list[5]
@@ -388,8 +387,6 @@ class ShopView(dc.ui.View,):
 
         ticker_msg = await interaction.followup.send(ticker, wait=True)
 
-        charge_user(interaction.user.id, 3)
-
         #now make the actual roulette wheel
         roulette_list = []
         # wheel will be a list of numbers but translated as colors for dc
@@ -402,11 +399,11 @@ class ShopView(dc.ui.View,):
         }
         for _ in range(11):
             rarity = random.randint(1, 100)
-            if rarity < 70:
+            if rarity <= 80:
                 roulette_list.append(2)
-            elif rarity < 85:
+            elif rarity <= 94:
                 roulette_list.append(3)
-            elif rarity < 95:
+            elif rarity <= 99:
                 roulette_list.append(4)
             else:
                 roulette_list.append(5)
@@ -414,11 +411,14 @@ class ShopView(dc.ui.View,):
         #send roulette wheel and update it steps # of times
         wheel_str = "".join(translations[i] for i in roulette_list)
         await ticker_msg.edit(content=ticker + "\n" + wheel_str)
+        
+        charge_user(interaction.user.id, 3)
+
         for j in range(steps):
             first = roulette_list.pop(0)
             roulette_list.append(first)
             wheel_str = "".join(translations[i] for i in roulette_list)
-            await ticker_msg.edit(content=ticker + "\n" + wheel_str)
+            await ticker_msg.edit(content=" \n" + ticker + "\n" + wheel_str)
             await asyncio.sleep((j**2)/64)
 
         rarity = roulette_list[5]
@@ -453,8 +453,6 @@ class ShopView(dc.ui.View,):
 
         ticker_msg = await interaction.followup.send(ticker, wait=True)
 
-        charge_user(interaction.user.id, 5)
-
         #now make the actual roulette wheel
         roulette_list = []
         # wheel will be a list of numbers but translated as colors for dc
@@ -467,9 +465,9 @@ class ShopView(dc.ui.View,):
         }
         for _ in range(11):
             rarity = random.randint(1, 100)
-            if rarity < 70:
+            if rarity <= 80:
                 roulette_list.append(3)
-            elif rarity < 85:
+            elif rarity <= 94:
                 roulette_list.append(4)
             else:
                 roulette_list.append(5)
@@ -477,11 +475,14 @@ class ShopView(dc.ui.View,):
         #send roulette wheel and update it steps # of times
         wheel_str = "".join(translations[i] for i in roulette_list)
         await ticker_msg.edit(content=ticker + "\n" + wheel_str)
+
+        charge_user(interaction.user.id, 5)
+
         for j in range(steps):
             first = roulette_list.pop(0)
             roulette_list.append(first)
             wheel_str = "".join(translations[i] for i in roulette_list)
-            await ticker_msg.edit(content=ticker + "\n" + wheel_str)
+            await ticker_msg.edit(content=" \n" + ticker + "\n" + wheel_str)
             await asyncio.sleep((j**2)/64)
 
         rarity = roulette_list[5]
@@ -521,7 +522,7 @@ class Tcg(dc.ext.commands.Cog):
         rarity: app_commands.Range[int, 1,5]):
         '''Add a card to the database. Rarity is the number given or higher'''
         if not interaction.user.id == ADMINID:
-            await interaction.response.send_message("Du hast nicht die Rechte diesen Befehl auszuführen!")
+            await interaction.response.send_message("Du hast nicht die Rechte diesen Befehl auszuführen!", ephemeral=True)
             return
         if len(name) > 30:
             await interaction.response.send_message("Der Name ist zu lang (max: 30)", ephemeral=True)
@@ -737,3 +738,77 @@ class Tcg(dc.ext.commands.Cog):
 
         embed, dc_file = create_embed(card)
         await interaction.response.send_message(embed=embed, file=dc_file)
+
+    @tcg.command(
+        name="token",
+        description="(ADMIN ONLY) ändere den Tokenkontostand einer Person"
+    )
+    async def token(self, interaction: dc.Interaction, target: dc.User, amount: int):
+        '''manage the tokens of a player'''
+        if not interaction.user.id == ADMINID:
+            await interaction.response.send_message("Du hast nicht die Rechte diesen Befehl auszuführen!", ephemeral=True)
+            return
+
+        con = sqlite3.connect("tcg.db")
+        cur = con.cursor()
+
+        cur.execute("SELECT tokens FROM user_tokens WHERE id = ?", (target.id,))
+        if not cur.fetchone():
+            await interaction.response.send_message(
+                f"{target.mention} hat noch kein Konto. Bitte zuerst `/tcg register` ausführen!",
+                ephemeral=True
+            )
+            con.close()
+            return
+
+        cur.execute(
+            "UPDATE user_tokens SET tokens = tokens + ? WHERE id = ?",
+            (amount, target.id)
+        )
+        con.commit()
+        con.close()
+
+        await interaction.response.send_message(f"Erfolgreich {target.mention} {amount} tokens hinzugefügt")
+
+    @tcg.command(
+        name="trade",
+        description="Gib jemandem eine deiner Karten"
+    )
+    async def trade(self, interaction: dc.Interaction, ucid_str: int, target: dc.User):
+        '''Let a player give someone else one of their cards'''
+
+        ucid = int(ucid_str)
+        user_id = interaction.user.id
+        target_id = target.id
+        if target_id == user_id:
+            await interaction.response.send_message("Du kannst keine Karten an dich selber senden")
+
+        con = sqlite3.connect("tcg.db")
+        cur = con.cursor()
+
+        cur.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?",
+            (f"user_{target_id}",)
+        )
+        if not cur.fetchone():
+            await interaction.response.send_message(
+                "Der Ziel-User hat noch kein Inventar und kann nichts empfangen"
+            )
+            con.close()
+            return
+
+        cur.execute(f"SELECT 1 FROM user_{user_id} WHERE ucid = {ucid}")
+        result = cur.fetchone()
+
+        if not result:
+            await interaction.response.send_message("Du besitzt diese Karte nicht")
+            return
+
+        assign_card_to_player(ucid=ucid, player_id=target_id)
+        cur.execute(
+            f"DELETE FROM user_{user_id} WHERE ucid = ?", (ucid,)
+        )
+        con.commit()
+        con.close()
+
+        await interaction.response.send_message(f"Erfolgreich Karte mit ID: {ucid} an {target.mention} gesendet")
