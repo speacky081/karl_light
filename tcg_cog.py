@@ -542,7 +542,7 @@ class Tcg(dc.ext.commands.Cog):
         if len(schwaeche) < 1:
             await interaction.response.send_message("Die Schwäche ist zu kurz (min: 1)", ephemeral=True)
             return
-        
+
         creator = interaction.user.id
 
         await interaction.response.send_message(
@@ -661,7 +661,7 @@ class Tcg(dc.ext.commands.Cog):
         player_tokens = row[0] if row else 0
         cur.close()
 
-        view = ShopView(user_id)
+        view = ShopView(user_id, timeout=120)
 
         for btn in view.children:
             if btn.label == "normal" and player_tokens < 1:
