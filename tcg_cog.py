@@ -981,8 +981,8 @@ class Tcg(dc.ext.commands.Cog):
                     f"DELETE FROM user_{user_id} WHERE ucid = ?", (ucid3,)
                 )
 
-        charge_user(user_id, payout)
-
         con.commit()
         con.close()
+
+        charge_user(user_id, payout)
         await interaction.followup.send(f"Karten erfolgreich verkauft. Du kriegst {-payout} Tokens.")
