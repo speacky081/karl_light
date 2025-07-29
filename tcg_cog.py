@@ -896,14 +896,7 @@ class Tcg(dc.ext.commands.Cog):
     @tcg.command(
         name="verscherbeln",
         description="""
-        verscherbel bis zu 3 deiner Karten und lass dir von Karlchen Token auszahlen\n
-        Kombinierter Gesamtscore entspricht tokens:\n
-        <40 => 0 Tokens\n
-        40 - 80 => 1 Token\n
-        81 - 110 => 2 Tokens\n
-        111 - 140 => 3 Tokens\n
-        141 - 160 => 4 Tokens\n
-        >160 => 5 Tokens
+        Verscherbel bis zu 3 deiner Karten. Du bekommst weniger Geld aus du ausgegeben hast!
         """
     )
     @app_commands.autocomplete(ucid_1=ucid_autocomplete)
