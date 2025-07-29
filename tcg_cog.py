@@ -8,6 +8,7 @@ import filetype
 import discord as dc
 from discord import app_commands
 from discord import Color
+from wcwidth import wcswidth
 
 # Emojis: :white_large_square: :green_square: :blue_square: :purple_square: :orange_square:
 # database tables:
@@ -21,6 +22,13 @@ ALLOWED_TYPES = {"image/png", "image/jpeg", "image/gif"}
 
 with open("ADMINID.txt", "r", encoding="utf-8") as file:
     ADMINID = int(file.readlines()[0])
+
+def pad_to_width(text: str, width: int) -> str:
+    """Pad on the right with spaces until the *display* width is `width`."""
+    w = wcswidth(text)
+    if w < 0:
+        w = len(text)  # fallback for unprintables
+    return text + " " * max(width - w, 0)
 
 def daily_token() -> None:
     '''Give everyone 1 Token'''
@@ -164,7 +172,7 @@ def create_card(rarity: int) -> int:
     template = cur.fetchone()
     con.close()
     # unique card ID
-    ucid = hash(str(time.time()) + str(template[0]) + str(rarity) + template[1] + template[3] + template[4])
+    ucid = abs(hash(str(time.time()) + str(template[0]) + str(rarity) + template[1] + template[3] + template[4]))
 
     miitopia_role = choose_miitopia()
     murder_role = choose_murder()
@@ -676,7 +684,12 @@ class Tcg(dc.ext.commands.Cog):
             description=f"Deine Token: `{player_tokens}`",
             color=dc.Color.blurple()
         )
-        await interaction.followup.send(embed=embed, view=view)
+
+        shop_msg = await interaction.followup.send(embed=embed, view=view)
+        await asyncio.sleep(120)
+        for btn in view.children:
+            btn.disabled = True
+        await shop_msg.edit(embed=embed, view=view)
 
     @tcg.command(
         name="inventar",
@@ -692,10 +705,10 @@ class Tcg(dc.ext.commands.Cog):
         await interaction.response.defer()
 
         rarity_translation = {
-            1: "⭐        ",
-            2: "⭐⭐      ",
-            3: "⭐⭐⭐    ",
-            4: "⭐⭐⭐⭐  ",
+            1: "⭐",
+            2: "⭐⭐",
+            3: "⭐⭐⭐",
+            4: "⭐⭐⭐⭐",
             5: "🌟🌟🌟🌟🌟"
         }
 
@@ -707,11 +720,8 @@ class Tcg(dc.ext.commands.Cog):
         cur = con.cursor()
         cur.execute(f"SELECT ucid FROM user_{user_id}")
         card_ucids = cur.fetchall()
-        longest_name_length = 0
         for ucid in card_ucids:
             card = read_card_from_db(ucid[0])
-            if len(card["name"])>longest_name_length:
-                longest_name_length += len(card["name"])
             cards.append(card)
 
         match option.value:
@@ -722,13 +732,15 @@ class Tcg(dc.ext.commands.Cog):
             case 3:
                 sorted_cards = sorted(cards, key=lambda card: card["total_score"], reverse=True)
 
+        max_name_width = max(wcswidth(c["name"]) for c in sorted_cards)
+
         inventory_string = "```\n"
         for card in sorted_cards:
-            name_str = card["name"].ljust(longest_name_length)
-            rarity_str = rarity_translation[card["rarity"]]
-            score_str  = str(card["total_score"]).ljust(3)
+            name_str = pad_to_width(card["name"], max_name_width)
+            rarity_str = pad_to_width(rarity_translation[card["rarity"]], 10)
+            score_str  = pad_to_width(str(card["total_score"]), 3)
 
-            inventory_string += f"{name_str}:{rarity_str}:{score_str} id: {card['ucid']}\n"
+            inventory_string += f"{name_str}:{rarity_str}:{score_str}| id: {card['ucid']}\n"
             if len(inventory_string) > 1500 and len(inventory_string) < 1997:
                 inventory_string += "```"
                 await interaction.followup.send(inventory_string)
