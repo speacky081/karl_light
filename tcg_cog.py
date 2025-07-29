@@ -725,11 +725,11 @@ class Tcg(dc.ext.commands.Cog):
         await interaction.response.defer()
 
         rarity_translation = {
-            1: "⭐",
-            2: "⭐⭐",
-            3: "⭐⭐⭐",
-            4: "⭐⭐⭐⭐",
-            5: "🌟🌟🌟🌟🌟"
+            1: "(⭐)",
+            2: "(⭐⭐)",
+            3: "(⭐⭐⭐)",
+            4: "(⭐⭐⭐⭐)",
+            5: "(🌟🌟🌟🌟🌟)"
         }
 
         user_id = interaction.user.id
@@ -760,7 +760,7 @@ class Tcg(dc.ext.commands.Cog):
             rarity_str = pad_to_width(rarity_translation[card["rarity"]], 10)
             score_str  = pad_to_width(str(card["total_score"]), 3)
 
-            inventory_string += f"{score_str} {name_str}({rarity_str})\nid: {card['ucid']}\n"
+            inventory_string += f"{score_str} {name_str} {rarity_str}id: {card['ucid']}\n"
             if len(inventory_string) > 1500 and len(inventory_string) < 1997:
                 inventory_string += "```"
                 await interaction.followup.send(inventory_string)
