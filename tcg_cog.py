@@ -322,7 +322,7 @@ class ShopView(dc.ui.View,):
         steps = random.randint(8,12)
 
         # make the indicator for the roulette wheel
-        ticker = ""
+        ticker = "Viel Glück!\n"
         for _ in range(5):
             ticker += ":white_large_square:"
         ticker += ":arrow_down_small:"
@@ -388,7 +388,7 @@ class ShopView(dc.ui.View,):
         steps = random.randint(8,12)
 
         # make the indicator for the roulette wheel
-        ticker = ""
+        ticker = "Viel Glück!\n"
         for _ in range(5):
             ticker += ":green_square:"
         ticker += ":arrow_down_small:"
@@ -454,7 +454,7 @@ class ShopView(dc.ui.View,):
         steps = random.randint(8,12)
 
         # make the indicator for the roulette wheel
-        ticker = ""
+        ticker = "Viel Glück!\n"
         for _ in range(5):
             ticker += ":blue_square:"
         ticker += ":arrow_down_small:"
