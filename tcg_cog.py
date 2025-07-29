@@ -691,6 +691,26 @@ class Tcg(dc.ext.commands.Cog):
             btn.disabled = True
         await shop_msg.edit(embed=embed, view=view)
 
+    async def ucid_autocomplete(self, interaction: dc.Interaction, current: str):
+        '''returns list of 25 ucids the player has'''
+        user_id = interaction.user.id
+        con = sqlite3.connect("tcg.db")
+        cur = con.cursor()
+        cur.execute(f"SELECT ucid FROM user_{user_id}")
+        ucids = [r[0] for r in cur.fetchall()]
+        con.close()
+
+        choices: list[app_commands.Choice[str]] = []
+        for ucid in ucids:
+            card = read_card_from_db(ucid)
+            label = f"{card['name']} {card['rarity']} (ID: {ucid})"
+            if current.lower() in label.lower():
+                choices.append(app_commands.Choice(name=label, value=str(ucid)))
+            if len(choices) >= 25:
+                break
+
+        return choices
+
     @tcg.command(
         name="inventar",
         description="lass dir eine kurze übersicht über deine karten senden"
@@ -740,7 +760,7 @@ class Tcg(dc.ext.commands.Cog):
             rarity_str = pad_to_width(rarity_translation[card["rarity"]], 10)
             score_str  = pad_to_width(str(card["total_score"]), 3)
 
-            inventory_string += f"{name_str}:{rarity_str}:{score_str}| id: {card['ucid']}\n"
+            inventory_string += f"{score_str} {name_str}({rarity_str})\nid: {card['ucid']}\n"
             if len(inventory_string) > 1500 and len(inventory_string) < 1997:
                 inventory_string += "```"
                 await interaction.followup.send(inventory_string)
@@ -752,6 +772,7 @@ class Tcg(dc.ext.commands.Cog):
         name="show",
         description="gib eine ID einer deiner Karten an um sie dir anzeigen zu lassen"
     )
+    @app_commands.autocomplete(ucid_str=ucid_autocomplete)
     async def show(self, interaction: dc.Interaction, ucid_str: str):
         '''Let the user display one of their cards'''
 
