@@ -682,7 +682,12 @@ class Tcg(dc.ext.commands.Cog):
         name="inventar",
         description="lass dir eine kurze übersicht über deine karten senden"
     )
-    async def inventory(self, interaction: dc.Interaction):
+    @app_commands.choices(option = [
+        app_commands.Choice(name="Name",value=1),
+        app_commands.Choice(name="Seltenheit",value=2),
+        app_commands.Choice(name="Score",value=3)
+    ])
+    async def inventory(self, interaction: dc.Interaction, option:app_commands.Choice[int]):
         '''send a string with most important properties of cards'''
         await interaction.response.defer()
 
@@ -705,12 +710,26 @@ class Tcg(dc.ext.commands.Cog):
         for ucid in card_ucids:
             cards.append(read_card_from_db(ucid[0]))
 
-        inventory_string = ""
-        for card in cards:
-            inventory_string += f"{card['name']}: {rarity_translation[card['rarity']]}; {card['total_score']}. id: {card['ucid']}\n"
-            if len(inventory_string) > 1500 and len(inventory_string) < 2000:
+        match option.value:
+            case 1:
+                sorted_cards = sorted(cards, key=lambda card: card["name"])
+            case 2:
+                sorted_cards = sorted(cards, key=lambda card: card["rarity"])
+            case 3:
+                sorted_cards = sorted(cards, key=lambda card: card["total_score"])
+
+        inventory_string = "```\n"
+        for card in sorted_cards:
+            name_str = card["name"].ljust(50)
+            rarity_str = rarity_translation[card["rarity"]].ljust(35)
+            score_str  = str(card["total_score"]).rjust(5)
+
+            inventory_string += f"{name_str}: {rarity_str}; **{score_str}** id: {card['ucid']}\n"
+            if len(inventory_string) > 1500 and len(inventory_string) < 1997:
+                inventory_string += "```"
                 await interaction.followup.send(inventory_string)
-                inventory_string = ""
+                inventory_string = "```\n"
+        inventory_string += "```"
         await interaction.followup.send(inventory_string)
 
     @tcg.command(
