@@ -1,3 +1,7 @@
+"""
+A cog to simulate a trading card game. Comes w/o any card templates.
+"""
+
 import sqlite3
 import time
 import os
@@ -10,7 +14,6 @@ from discord import app_commands
 from discord import Color
 from wcwidth import wcswidth
 
-# Emojis: :white_large_square: :green_square: :blue_square: :purple_square: :orange_square:
 # database tables:
 # card_templates
 # user_tokens (only user id and tokens)
@@ -221,7 +224,7 @@ def read_card_from_db(ucid: int) -> dict:
     '''reads a card from the db and returns it as dict'''
     con = sqlite3.connect("tcg.db")
     cur = con.cursor()
-    cur.execute(f"""
+    cur.execute("""
             SELECT
             ucid,
             name,
@@ -693,6 +696,14 @@ class Tcg(dc.ext.commands.Cog):
 
     async def ucid_autocomplete(self, interaction: dc.Interaction, current: str):
         '''returns list of 25 ucids the player has'''
+        rarity_translation = {
+            1: "⭐",
+            2: "⭐⭐",
+            3: "⭐⭐⭐",
+            4: "⭐⭐⭐⭐",
+            5: "🌟🌟🌟🌟🌟"
+        }
+        
         user_id = interaction.user.id
         con = sqlite3.connect("tcg.db")
         cur = con.cursor()
@@ -703,7 +714,7 @@ class Tcg(dc.ext.commands.Cog):
         choices: list[app_commands.Choice[str]] = []
         for ucid in ucids:
             card = read_card_from_db(ucid)
-            label = f"{card['name']} {card['rarity']} (ID: {ucid})"
+            label = f"{card['name']} {rarity_translation[card['rarity']]} (ID: {ucid})"
             if current.lower() in label.lower():
                 choices.append(app_commands.Choice(name=label, value=str(ucid)))
             if len(choices) >= 25:
@@ -881,3 +892,104 @@ class Tcg(dc.ext.commands.Cog):
         con.close()
 
         await interaction.response.send_message(f"Erfolgreich Karte mit ID: {ucid} an {target.mention} gesendet")
+
+    @tcg.command(
+        name="verscherbeln",
+        description="""
+        verscherbel bis zu 3 deiner Karten und lass dir von Karlchen Token auszahlen\n
+        Kombinierter Gesamtscore entspricht tokens:\n
+        <40 => 0 Tokens\n
+        40 - 80 => 1 Token\n
+        81 - 110 => 2 Tokens\n
+        111 - 140 => 3 Tokens\n
+        141 - 160 => 4 Tokens\n
+        >160 => 5 Tokens
+        """
+    )
+    @app_commands.autocomplete(ucid_1=ucid_autocomplete)
+    @app_commands.autocomplete(ucid_2=ucid_autocomplete)
+    @app_commands.autocomplete(ucid_3=ucid_autocomplete)
+    async def sell(self, interaction: dc.Interaction, ucid_1: str, ucid_2: str = None, ucid_3: str = None):
+        '''let a player sell up to 3 cards. Combines their total score to pay out tokens'''
+        await interaction.response.defer()
+        user_id = interaction.user.id
+
+        try:
+            ucid1 = int(ucid_1)
+            ucid2 = int(ucid_2) if ucid_2 is not None else None
+            ucid3 = int(ucid_3) if ucid_3 is not None else None
+        except ValueError:
+            return await interaction.followup.send("Bitte gib eine gültige ganze Zahl an.", ephemeral=True)
+
+        ucids = [u for u in (ucid1, ucid2, ucid3) if u is not None]
+        if len(set(ucids)) != len(ucids):
+            return await interaction.followup.send(
+                "Du kannst nicht 2 mal die gleiche Karte verkaufen.", ephemeral=True
+            )
+
+        combined_value = sum(read_card_from_db(u)["total_score"] for u in ucids)
+
+        if combined_value < 40:
+            payout = 0
+        elif combined_value <= 80:
+            payout = -1
+        elif combined_value <= 110:
+            payout = -2
+        elif combined_value <= 140:
+            payout = -3
+        elif combined_value <= 160:
+            payout = -4
+        else:
+            payout = -5
+
+        con = sqlite3.connect("tcg.db")
+        cur = con.cursor()
+
+        if ucid1 is not None:
+            cur.execute(f"SELECT 1 FROM user_{user_id} WHERE ucid = ?", (ucid1,))
+            result = cur.fetchone()
+
+            if not result:
+                await interaction.followup.send("Du besitzt Karte 1 nicht", ephemeral=True)
+                con.commit()
+                con.close()
+                return
+
+        if ucid2 is not None:
+            cur.execute(f"SELECT 1 FROM user_{user_id} WHERE ucid = ?", (ucid2,))
+            result = cur.fetchone()
+
+            if not result:
+                await interaction.followup.send("Du besitzt Karte 2 nicht", ephemeral=True)
+                con.commit()
+                con.close()
+                return
+
+        if ucid3 is not None:
+            cur.execute(f"SELECT 1 FROM user_{user_id} WHERE ucid = ?", (ucid3,))
+            result = cur.fetchone()
+
+            if not result:
+                await interaction.followup.send("Du besitzt Karte 3 nicht", ephemeral=True)
+                con.commit()
+                con.close()
+                return
+
+        if ucid1 is not None:
+            cur.execute(
+                    f"DELETE FROM user_{user_id} WHERE ucid = ?", (ucid1,)
+                )
+        if ucid2 is not None:
+            cur.execute(
+                    f"DELETE FROM user_{user_id} WHERE ucid = ?", (ucid2,)
+                )
+        if ucid3 is not None:
+            cur.execute(
+                    f"DELETE FROM user_{user_id} WHERE ucid = ?", (ucid3,)
+                )
+
+        charge_user(user_id, payout)
+
+        con.commit()
+        con.close()
+        await interaction.followup.send(f"Karten erfolgreich verkauft. Du kriegst {-payout} Tokens.")
