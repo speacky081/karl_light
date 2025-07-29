@@ -692,10 +692,10 @@ class Tcg(dc.ext.commands.Cog):
         await interaction.response.defer()
 
         rarity_translation = {
-            1: "⭐",
-            2: "⭐⭐",
-            3: "⭐⭐⭐",
-            4: "⭐⭐⭐⭐",
+            1: "⭐        ",
+            2: "⭐⭐      ",
+            3: "⭐⭐⭐    ",
+            4: "⭐⭐⭐⭐  ",
             5: "🌟🌟🌟🌟🌟"
         }
 
@@ -725,7 +725,7 @@ class Tcg(dc.ext.commands.Cog):
         inventory_string = "```\n"
         for card in sorted_cards:
             name_str = card["name"].ljust(longest_name_length)
-            rarity_str = rarity_translation[card["rarity"]].ljust(10)
+            rarity_str = rarity_translation[card["rarity"]]
             score_str  = str(card["total_score"]).ljust(3)
 
             inventory_string += f"{name_str}:{rarity_str}:{score_str} id: {card['ucid']}\n"
