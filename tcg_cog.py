@@ -356,7 +356,7 @@ class ShopView(dc.ui.View,):
         #send roulette wheel and update it steps # of times
         wheel_str = "".join(translations[i] for i in roulette_list)
         await ticker_msg.edit(content=ticker + "\n" + wheel_str)
-        
+
         charge_user(interaction.user.id, 1)
 
         for j in range(steps):
@@ -422,7 +422,7 @@ class ShopView(dc.ui.View,):
         #send roulette wheel and update it steps # of times
         wheel_str = "".join(translations[i] for i in roulette_list)
         await ticker_msg.edit(content=ticker + "\n" + wheel_str)
-        
+
         charge_user(interaction.user.id, 3)
 
         for j in range(steps):
@@ -703,7 +703,7 @@ class Tcg(dc.ext.commands.Cog):
             4: "⭐⭐⭐⭐",
             5: "🌟🌟🌟🌟🌟"
         }
-        
+
         user_id = interaction.user.id
         con = sqlite3.connect("tcg.db")
         cur = con.cursor()
@@ -847,6 +847,7 @@ class Tcg(dc.ext.commands.Cog):
         name="trade",
         description="Gib jemandem eine deiner Karten"
     )
+    @app_commands.autocomplete(ucid_str=ucid_autocomplete)
     async def trade(self, interaction: dc.Interaction, ucid_str: str, target: dc.User):
         '''Let a player give someone else one of their cards'''
 
