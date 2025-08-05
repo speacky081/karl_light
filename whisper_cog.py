@@ -1,6 +1,7 @@
 import os.path
 import discord as dc
 from discord import app_commands
+from discord.ext import commands
 
 class WhisperCog(dc.ext.commands.Cog):
     '''
@@ -13,6 +14,12 @@ class WhisperCog(dc.ext.commands.Cog):
                 clients.write("")
         with open("whisper_clients.txt", "r", encoding="utf-8") as clients:
             self.clients = [line.strip() for line in clients]
+
+    @commands.Cog.listener()
+    async def on_message(self, message: dc.Message):
+        '''Listen for non-whisper messages and delete them'''
+        if not message.author.bot:
+            await message.delete()
 
     @app_commands.command(
         name="whisper", description="Sag etwas, aber bleib dabei anonym")
