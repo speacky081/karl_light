@@ -923,15 +923,15 @@ class Tcg(dc.ext.commands.Cog):
 
         combined_value = sum(read_card_from_db(u)["total_score"] for u in ucids)
 
-        if combined_value < 40:
+        if combined_value < 35:
             payout = 0
-        elif combined_value <= 80:
+        elif combined_value <= 42:
             payout = -1
-        elif combined_value <= 110:
+        elif combined_value <= 52:
             payout = -2
-        elif combined_value <= 140:
+        elif combined_value <= 60:
             payout = -3
-        elif combined_value <= 160:
+        elif combined_value <= 80:
             payout = -4
         else:
             payout = -5
