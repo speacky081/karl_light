@@ -18,7 +18,7 @@ class WhisperCog(dc.ext.commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: dc.Message):
         '''Listen for non-whisper messages and delete them'''
-        if not message.author.bot:
+        if not message.author.bot and message.channel.id == 1397636825971032095:
             await message.delete()
 
     @app_commands.command(
