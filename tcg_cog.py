@@ -319,7 +319,7 @@ class ShopView(dc.ui.View,):
             b.disabled = True
         await interaction.message.edit(view=self)
 
-        steps = random.randint(8,12)
+        steps = random.randint(8,16)
 
         # make the indicator for the roulette wheel
         ticker = "Viel Glück!\n"
@@ -385,7 +385,7 @@ class ShopView(dc.ui.View,):
             b.disabled = True
         await interaction.message.edit(view=self)
 
-        steps = random.randint(8,12)
+        steps = random.randint(8,16)
 
         # make the indicator for the roulette wheel
         ticker = "Viel Glück!\n"
@@ -451,7 +451,7 @@ class ShopView(dc.ui.View,):
             b.disabled = True
         await interaction.message.edit(view=self)
 
-        steps = random.randint(8,12)
+        steps = random.randint(8,16)
 
         # make the indicator for the roulette wheel
         ticker = "Viel Glück!\n"
@@ -925,13 +925,13 @@ class Tcg(dc.ext.commands.Cog):
 
         if combined_value < 35:
             payout = 0
-        elif combined_value <= 42:
+        elif combined_value <= 55:
             payout = -1
-        elif combined_value <= 52:
+        elif combined_value <= 85:
             payout = -2
-        elif combined_value <= 60:
+        elif combined_value <= 105:
             payout = -3
-        elif combined_value <= 80:
+        elif combined_value <= 125:
             payout = -4
         else:
             payout = -5
