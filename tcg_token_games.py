@@ -1,0 +1,322 @@
+"""
+Provide minigames for players to win tokens for the tcg
+"""
+
+import random
+import os
+import time
+from datetime import datetime
+import sqlite3
+from PIL import Image
+import discord as dc
+
+rotation_state = {"rot":0, "zom":0, "path":""}
+target_state = {"rot":0, "zom":0, "path":""}
+rotation_player_group = {}
+rotation_player_value = {}
+
+translations = {
+    "zom":"Zoom",
+    "rot":"Rotation"
+}
+
+def path_to_random_card() -> str:
+    """Return the path to a non-gif image of a card that has already been drawn"""
+    con = sqlite3.connect("tcg.db")
+    cur = con.cursor()
+
+    cur.execute("""
+        SELECT DISTINCT file_path FROM cards
+    """)
+    paths = [row[0] for row in cur.fetchall()]
+
+    con.close()
+
+    path = random.choice(paths)
+
+    if ".gif" in path:
+        path = path_to_random_card()
+
+    return path
+
+class RotateView(dc.ui.View):
+    """Attach Buttons for Rotating"""
+
+    def __init__(self, owner_id: int, *, timeout: float = 180):
+        super().__init__(timeout=timeout)
+        self.owner_id = owner_id
+
+    @dc.ui.button(label="links", style=dc.ButtonStyle.secondary, emoji="◀️")
+    async def left_button_callback(self, interaction: dc.Interaction, button):
+        """Rotate image left by amount based on player at random"""
+        user_id = interaction.user.id
+
+        if self.owner_id != user_id:
+            await interaction.response.send_message("Das ist nicht dein Kontrollpanel!")
+            return
+
+        await interaction.response.defer()
+
+        for b in self.children:
+            b.disabled = True
+        await interaction.message.edit(view=self)
+
+        if user_id in rotation_player_value:
+            amount = rotation_player_value[user_id]
+            rotation_state["rot"] += amount
+            rview = RotateView(user_id)
+            await interaction.followup.send(f"<@{user_id}> dreht das Bild um `{amount*10}` Grad nach links")
+            await interaction.followup.send("Hier kannst du weitermachen", view=rview)
+        else:
+            cview = ChallengeView(user_id)
+            await interaction.followup.send("Du bist noch nicht in der Challenge angemeldet", view=cview, ephemeral=True)
+
+    @dc.ui.button(label="rechts", style=dc.ButtonStyle.secondary, emoji="▶️")
+    async def right_button_callback(self, interaction: dc.Interaction, button):
+        """Rotate image left by amount based on player at random"""
+        user_id = interaction.user.id
+
+        if self.owner_id != user_id:
+            await interaction.response.send_message("Das ist nicht dein Kontrollpanel!")
+            return
+
+        await interaction.response.defer()
+
+        for b in self.children:
+            b.disabled = True
+        await interaction.message.edit(view=self)
+
+        if user_id in rotation_player_value:
+            amount = rotation_player_value[user_id]
+            rotation_state["rot"] -= amount
+            rview = RotateView(user_id)
+            await interaction.followup.send(f"<@{user_id}> dreht das Bild um `{amount*10}` Grad nach rechts")
+            await interaction.followup.send("Hier kannst du weitermachen", view=rview)
+        else:
+            cview = ChallengeView(user_id)
+            await interaction.followup.send("Du bist noch nicht in der Challenge angemeldet", view=cview, ephemeral=True)
+
+class ZoomView(dc.ui.View):
+    """Attach Buttons for Zooming"""
+
+    def __init__(self, owner_id: int, *, timeout: float = 180):
+        super().__init__(timeout=timeout)
+        self.owner_id = owner_id
+
+    @dc.ui.button(label="+", style=dc.ButtonStyle.secondary, emoji="🔍")
+    async def plus_button_callback(self, interaction: dc.Interaction, button):
+        """Rotate image left by amount based on player at random"""
+        user_id = interaction.user.id
+
+        if self.owner_id != user_id:
+            await interaction.response.send_message("Das ist nicht dein Kontrollpanel!")
+            return
+
+        await interaction.response.defer()
+
+        for b in self.children:
+            b.disabled = True
+        await interaction.message.edit(view=self)
+
+        if user_id in rotation_player_value:
+            amount = rotation_player_value[user_id]
+            rotation_state["zom"] += amount
+            zview = ZoomView(user_id)
+            await interaction.followup.send(f"<@{user_id}> zoomt das Bild um den Faktor `{amount}`")
+            await interaction.followup.send("Hier kannst du weitermachen", view=zview)
+        else:
+            cview = ChallengeView(user_id)
+            await interaction.followup.send("Du bist noch nicht in der Challenge angemeldet", view=cview, ephemeral=True)
+
+    @dc.ui.button(label="-", style=dc.ButtonStyle.secondary, emoji="🔎")
+    async def minus_button_callback(self, interaction: dc.Interaction, button):
+        """Rotate image left by amount based on player at random"""
+        user_id = interaction.user.id
+
+        if self.owner_id != user_id:
+            await interaction.response.send_message("Das ist nicht dein Kontrollpanel!")
+            return
+
+        await interaction.response.defer()
+
+        for b in self.children:
+            b.disabled = True
+        await interaction.message.edit(view=self)
+
+        if user_id in rotation_player_value:
+            amount = rotation_player_value[user_id]
+            rotation_state["zom"] -= amount
+            zview = ZoomView(user_id)
+            await interaction.followup.send(f"<@{user_id}> zoomt das Bild um den Faktor `-{amount}`")
+            await interaction.followup.send("Hier kannst du weitermachen", view=zview)
+        else:
+            cview = ChallengeView(user_id)
+            await interaction.followup.send("Du bist noch nicht in der Challenge angemeldet", view=cview, ephemeral=True)
+
+class ChallengeView(dc.ui.View):
+    """Attach buttons to choose team"""
+
+    def __init__(self, owner_id: int, *, timeout: float = 180):
+        super().__init__(timeout=timeout)
+        self.owner_id = owner_id
+
+    @dc.ui.button(label="Rotieren", style=dc.ButtonStyle.secondary, emoji="🗘")
+    async def rotate_callback(self, interaction: dc.Interaction, button):
+        """Assign the player to team rotate and give them a rotation degree amount"""
+        user_id = interaction.user.id
+
+        if user_id in rotation_player_group:
+            await interaction.response.send_message(f"Du bist schon im Team `{translations[rotation_player_group[user_id]]}`")
+            return
+
+        rotation_player_group[user_id] = "rot"
+        rotation_player_value[user_id] = random.choice([3,8])
+        rview = RotateView(user_id)
+        await interaction.response.send_message(f"Du wurdest Team `{translations[rotation_player_group[user_id]]}` zugeteilt und kannst `{rotation_player_value[user_id]}` Grad drehen", view=rview)
+
+    @dc.ui.button(label="Zoomen", style=dc.ButtonStyle.secondary, emoji="🔍")
+    async def zoom_callback(self, interaction: dc.Interaction, button):
+        """Assign the player to team zoom and give them a zoom amount"""
+        user_id = interaction.user.id
+
+        if user_id in rotation_player_group:
+            await interaction.response.send_message(f"Du bist schon im Team `{translations[rotation_player_group[user_id]]}`")
+            return
+
+        rotation_player_group[user_id] = "zom"
+        rotation_player_value[user_id] = random.choice([3,8])
+        zview = ZoomView(user_id)
+        await interaction.response.send_message(f"Du wurdest Team `{translations[rotation_player_group[user_id]]}` zugeteilt und kannst `{rotation_player_value[user_id]}`-fach zoomen", view=zview)
+
+async def rotation_show(interaction: dc.Interaction):
+    "Challenge to rotate and zoom an image to a target orientation"
+    await interaction.response.defer()
+
+    global rotation_state, target_state, rotation_player_group, rotation_player_value
+
+    rotation_state = {"rot":0, "zom":0, "path":""}
+    target_state = {"rot":0, "zom":0, "path":""}
+    rotation_player_group = {}
+    rotation_player_value = {}
+
+    os.makedirs(os.path.dirname("TCG_images/challenge_images"), exist_ok=True)
+
+    con = sqlite3.connect("tcg.db")
+    cur = con.cursor()
+
+    cur.execute("SELECT image FROM tcgames")
+
+    path_to_original_image = cur.fetchone()[0]
+
+    con.close()
+
+    file_path = f"TCG_images/challenge_images/rotation-{str(datetime.today().strftime('%Y-%m-%d'))}-{str(hash(time.time()))}.png"
+
+    start_image = Image.open(path_to_original_image)
+    target_image = Image.open(path_to_original_image)
+    width, height = target_image.size
+
+    rotation = random.randint(1,36)
+    target_image = target_image.rotate(rotation*10)
+
+    # zoom into the middle of the picture
+    zoom = random.randint(2,10)
+    new_width = width/zoom
+    new_heigth = height/zoom
+    left = (width - new_width)/2
+    right = (width + new_width)/2
+    top = (height - new_heigth)/2
+    bottom = (height + new_heigth)/2
+    target_image = target_image.crop((left, top, right, bottom))
+
+    target_image.save(file_path, "PNG")
+
+    target_state["rot"] = rotation
+    target_state["zom"] = zoom
+    target_state["path"] = file_path
+    rotation_state["path"] = path_to_original_image
+
+    cview = ChallengeView(interaction.user.id)
+    await interaction.followup.send(
+        "Rotiert und zoomt das Bild bis es gleich aussieht wie das schon rotierte und gezoomte Bild!",
+        files=[
+            dc.File(path_to_original_image, filename="start.png"),
+            dc.File(file_path, filename="target.png")
+        ],
+        view=cview
+    )
+
+async def check(interaction: dc.Interaction):
+    user_id = interaction.user.id
+
+    await interaction.response.defer()
+
+    con = sqlite3.connect("tcg.db")
+    cur = con.cursor()
+
+    # playing is 0 or 1
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS tcgames (
+        start_time_unix INTEGER,
+        playing INTEGER,
+        type INTEGER,
+        image TEXT
+    )
+    """)
+
+    cur.execute("""
+    SELECT playing FROM tcgames
+    """)
+
+    playing = cur.fetchone()[0]
+
+    con.commit()
+    con.close()
+
+    if not playing:
+        await interaction.followup.send("Es läuft gerade keine Challenge", ephemeral=True)
+        return
+
+    target_image = Image.open(target_state["path"])
+    current_image = Image.open(rotation_state["path"])
+    width, height = current_image.size
+    current_image = current_image.rotate(rotation_state["rot"]*10)
+
+    zoom = rotation_state["zom"]
+    new_width = width/zoom
+    new_heigth = height/zoom
+    left = (width - new_width)/2
+    right = (width + new_width)/2
+    top = (height - new_heigth)/2
+    bottom = (height + new_heigth)/2
+    current_image = current_image.crop((left, top, right, bottom))
+
+    await interaction.followup.send(
+        "Das ist der momentane Stand:",
+        files=[
+            dc.File(rotation_state["path"], filename="start.png"),
+            dc.File(target_state["path"], filename="target.png")
+        ]
+    )
+
+    if rotation_state["rot"] == target_state["rot"] and rotation_state["zom"] == target_state["zom"]:
+        await interaction.followup.send("IHR HABTS GESCHAFFT. IHR ALLE BEKOMMT EIN TOKEN!")
+        con = sqlite3.connect("tcg.db")
+        cur = con.cursor()
+        cur.execute("""
+            UPDATE user_tokens
+            SET tokens = tokens + 1;
+        """)
+        con.commit()
+        con.close()
+        return
+
+    cview = ChallengeView(user_id)
+    await interaction.followup.send("Neue Spieler können sich hier einem Team hinzufügen", view=cview)
+
+    if rotation_player_group[user_id] == "rot":
+        rview = RotateView(user_id)
+        await interaction.followup.send("Hier kannst du weitermachen", view=rview, ephemeral=True)
+    elif rotation_player_group[user_id] == "zom":
+        zview = ZoomView(user_id)
+        await interaction.followup.send("Hier kannst du weitermachen", view=zview, ephemeral=True)

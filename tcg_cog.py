@@ -4,24 +4,61 @@ A cog to simulate a trading card game. Comes w/o any card templates.
 
 import sqlite3
 import time
+import datetime
 import os
 import random
 import math
 import asyncio
 import filetype
+import numpy as np
 import discord as dc
 from discord import app_commands
 from discord import Color
 from wcwidth import wcswidth
+import tcg_token_games as tcgames
 
 # database tables:
-# card_templates
-# user_tokens (only user id and tokens)
-# cards (actual cards that exist. Have ucid)
-# one table per player with all their ucids named user_{player_id}
+#   card_templates
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     name TEXT,
+#     hp INTEGER,
+#     staerke TEXT,
+#     schwaeche TEXT,
+#     rarity INTEGER,
+#     creator INTEGER,
+#     file_path TEXT
+
+#   user_tokens (only user id and tokens)
+#     id INTEGER,
+#     tokens INTEGER
+
+#   cards (actual cards that exist. Have ucid)
+#     ucid INTEGER,
+#     name TEXT,
+#     hp INTEGER,
+#     staerke TEXT,
+#     schwaeche TEXT,
+#     rarity INTEGER,
+#     file_path TEXT,
+#     total_score INTEGER,
+#     strength TEXT,
+#     intelligence TEXT,
+#     murder_role TEXT,
+#     miitopia_role TEXT
+
+#   one table per player with all their ucids named user_{player_id}
+#     ucid INTEGER
+
+#   tcgames for holding information about the token games
+#     start_time_unix INTEGER,
+#     playing INTEGER,
+#     type INTEGER                              is 0-whatever how many games there are
+#     image TEXT
 
 MAX_FILE_SIZE = 5 * 1024 * 1024 # 5MB
 ALLOWED_TYPES = {"image/png", "image/jpeg", "image/gif"}
+NUMBER_OF_TOKENGAMES = 1
+active_shops = {}
 
 with open("ADMINID.txt", "r", encoding="utf-8") as file:
     ADMINID = int(file.readlines()[0])
@@ -183,8 +220,12 @@ def create_card(rarity: int) -> int:
     strength = random.choice(possible_values[rarity]["strength"])
     intelligence = random.choice(possible_values[rarity]["intelligence"])
 
+    template[2] = np.random.normal(template[2], 15)
+    if template[2] < 1:
+        template[2] = np.random.normal(template[2], 15)
+
     total_score = 0
-    total_score += math.floor(math.log(template[2])**2)
+    total_score += math.floor(max(math.log(template[2])**2), 0)
     total_score += math.floor(math.exp(rarity-1))
 
     match strength:
@@ -295,7 +336,7 @@ def create_embed(card: dict) -> tuple[dc.Embed, dc.File]:
 
     return embed, dc_file
 
-class ShopView(dc.ui.View,):
+class ShopView(dc.ui.View):
     '''
     Create view with buttons.
     One Button per Boosterpack rarity.
@@ -664,6 +705,9 @@ class Tcg(dc.ext.commands.Cog):
 
         user_id = interaction.user.id
 
+        if not user_id in active_shops:
+            active_shops[user_id] = {}
+
         con = sqlite3.connect("tcg.db")
         cur = con.cursor()
 
@@ -683,12 +727,24 @@ class Tcg(dc.ext.commands.Cog):
                 btn.disabled = True
 
         embed = dc.Embed(
-            title="Booster‑Pack Shop",
+            title="Booster-Pack Shop",
             description=f"Deine Token: `{player_tokens}`",
             color=dc.Color.blurple()
         )
 
         shop_msg = await interaction.followup.send(embed=embed, view=view)
+
+        for message_id in active_shops[user_id]:
+            channel_id = active_shops[user_id][message_id]
+            channel = await self.bot.fetch_channel(channel_id)
+            message = await channel.fetch_message(message_id)
+
+            for b in message.view.children:
+                b.disabled = True
+            await message.edit(embed=embed, view=view)
+
+        active_shops[user_id][interaction.channel.id] = shop_msg.id
+
         await asyncio.sleep(120)
         for btn in view.children:
             btn.disabled = True
@@ -923,15 +979,15 @@ class Tcg(dc.ext.commands.Cog):
 
         combined_value = sum(read_card_from_db(u)["total_score"] for u in ucids)
 
-        if combined_value < 35:
+        if combined_value < 32:
             payout = 0
-        elif combined_value <= 55:
+        elif combined_value <= 64:
             payout = -1
-        elif combined_value <= 85:
+        elif combined_value <= 96:
             payout = -2
-        elif combined_value <= 105:
+        elif combined_value <= 128:
             payout = -3
-        elif combined_value <= 125:
+        elif combined_value <= 160:
             payout = -4
         else:
             payout = -5
@@ -987,3 +1043,71 @@ class Tcg(dc.ext.commands.Cog):
 
         charge_user(user_id, payout)
         await interaction.followup.send(f"Karten erfolgreich verkauft. Du kriegst {-payout} Tokens.")
+
+    @tcg.command(
+        name="Herausforderung",
+        description="Starte eine Challenge um Tokens zu verdienen. Cooldown: 48h"
+    )
+    async def challenge(self, interaction: dc.Interaction):
+        """Create the table for all the challenge information"""
+        await interaction.response.defer()
+        current_time = int(time.time())
+
+        con = sqlite3.connect("tcg.db")
+        cur = con.cursor()
+
+        # playing is 0 or 1
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS tcgames (
+            start_time_unix INTEGER,
+            playing INTEGER,
+            type INTEGER,
+            image TEXT
+        )
+        """)
+
+        cur.execute("""
+        SELECT playing FROM tcgames
+        """)
+
+        playing = cur.fetchone()[0]
+
+        cur.execute("""
+        SELECT start_time_unix FROM tcgames
+        """)
+
+        start_time = cur.fetchone()[0]
+
+        con.commit()
+        con.close()
+
+        if playing:
+            await interaction.followup.send("Es läuft schon ein Spiel. Du kannst da mitspielen")
+            return
+
+        if current_time - start_time < 172800:           # 48h
+            timedelta = str(datetime.timedelta(seconds=current_time-start_time))
+            await interaction.followup.send(f"Es ist noch nicht so weit. Warte {timedelta} für die nächste Herausforderung")
+            return
+
+        con = sqlite3.connect("tcg.db")
+        cur = con.cursor()
+
+        cur.execute("UPDATE tcgames SET start_time_unix = ?", (current_time,))
+        cur.execute("UPDATE tcgames SET playing = ?", (1,))
+
+        current_game = random.randint(1, NUMBER_OF_TOKENGAMES)
+        cur.execute("UPDATE tcgames SET type = ?", (current_game,))
+
+        image_path = tcgames.path_to_random_card()
+        cur.execute("UPDATE tcgames SET image = ?", (image_path,))
+        con.commit()
+        con.close()
+
+        match current_game:
+            case 1:
+                tcgames.rotation_show(interaction=interaction)
+
+    @app_commands.command(name="validieren", description="Validiert euer Ergebnis oder lasst euch anzeigen wie weit ihr seid")
+    async def check(self, interaction: dc.Interaction):
+        await tcgames.check(interaction)

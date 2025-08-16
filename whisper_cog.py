@@ -18,6 +18,7 @@ class ReplyModal(ui.Modal, title="Anonym antworten"):
 
     async def on_submit(self, interaction: Interaction):
         channel = interaction.client.get_channel(1397636825971032095)
+        await interaction.response.defer()
         if channel is None:
             channel = await interaction.client.fetch_channel(1397636825971032095)
 
@@ -25,7 +26,6 @@ class ReplyModal(ui.Modal, title="Anonym antworten"):
             f"\n**ANONYM** {self.reply.value}",
             allowed_mentions=dc.AllowedMentions(everyone=False)
         )
-        await interaction.response.send_message("Antwort gesendet ✅", ephemeral=True)
 
 @app_commands.context_menu(name="Antworten")
 async def reply_context(interaction: Interaction, message: dc.Message):
