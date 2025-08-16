@@ -1045,7 +1045,7 @@ class Tcg(dc.ext.commands.Cog):
         await interaction.followup.send(f"Karten erfolgreich verkauft. Du kriegst {-payout} Tokens.")
 
     @tcg.command(
-        name="Herausforderung",
+        name="herausforderung",
         description="Starte eine Challenge um Tokens zu verdienen. Cooldown: 48h"
     )
     async def challenge(self, interaction: dc.Interaction):
