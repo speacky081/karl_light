@@ -1108,6 +1108,6 @@ class Tcg(dc.ext.commands.Cog):
             case 1:
                 tcgames.rotation_show(interaction=interaction)
 
-    @app_commands.command(name="validieren", description="Validiert euer Ergebnis oder lasst euch anzeigen wie weit ihr seid")
+    @tcg.command(name="validieren", description="Validiert euer Ergebnis oder lasst euch anzeigen wie weit ihr seid")
     async def check(self, interaction: dc.Interaction):
         await tcgames.check(interaction)
