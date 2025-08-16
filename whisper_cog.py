@@ -56,11 +56,15 @@ class WhisperCog(dc.ext.commands.Cog):
     async def on_message(self, message: dc.Message):
         '''Listen for non-whisper messages and delete them'''
         if not message.author.bot and message.channel.id == 1397636825971032095:
-            if len(message.attachments[0]) > 0:
-                attachment_url = message.attachments[0].url
-                await message.channel.send(attachment_url)
-            await message.channel.send(message.content)
-            await message.delete()
+            try:
+                if len(message.attachments[0]) > 0:
+                    attachment_url = message.attachments[0].url
+                    await message.channel.send(attachment_url)
+                    await message.delete()
+                    return
+            except IndexError:
+                await message.channel.send(message.content)
+                await message.delete()
 
     @app_commands.command(
         name="whisper", description="Sag etwas, aber bleib dabei anonym")
