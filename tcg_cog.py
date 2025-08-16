@@ -1056,7 +1056,6 @@ class Tcg(dc.ext.commands.Cog):
         con = sqlite3.connect("tcg.db")
         cur = con.cursor()
 
-        # playing is 0 or 1
         cur.execute("""
         CREATE TABLE IF NOT EXISTS tcgames (
             start_time_unix INTEGER,
@@ -1066,17 +1065,17 @@ class Tcg(dc.ext.commands.Cog):
         )
         """)
 
+        # make sure one row exists
         cur.execute("""
-        SELECT playing FROM tcgames
+        INSERT INTO tcgames (start_time_unix, playing, type, image)
+        SELECT 0, 0, 0, ''
+        WHERE NOT EXISTS (SELECT 1 FROM tcgames)
         """)
 
-        playing = cur.fetchone()[0]
-
-        cur.execute("""
-        SELECT start_time_unix FROM tcgames
-        """)
-
-        start_time = cur.fetchone()[0]
+        # now safe to fetch
+        cur.execute("SELECT playing, start_time_unix FROM tcgames")
+        row = cur.fetchone()
+        playing, start_time = row
 
         con.commit()
         con.close()
