@@ -1,7 +1,31 @@
 import os.path
 import discord as dc
-from discord import app_commands
+from discord import app_commands, Interaction, TextStyle, ui
 from discord.ext import commands
+
+class ReplyModal(ui.Modal, title="Anonym antworten"):
+    def __init__(self, target_message: dc.Message):
+        super().__init__()
+        self.target_message = target_message
+
+        self.reply = ui.TextInput(
+            label="Deine Antwort",
+            style=TextStyle.paragraph,
+            required=True,
+            max_length=2000
+        )
+        self.add_item(self.reply)
+
+    async def on_submit(self, interaction: Interaction):
+        channel = interaction.client.get_channel(1397636825971032095)
+        if channel is None:
+            channel = await interaction.client.fetch_channel(1397636825971032095)
+
+        await self.target_message.reply(
+            f"\n**ANONYM** {self.reply.value}",
+            allowed_mentions=dc.AllowedMentions(everyone=False)
+        )
+        await interaction.response.send_message("Antwort gesendet ✅", ephemeral=True)
 
 class WhisperCog(dc.ext.commands.Cog):
     '''
@@ -26,16 +50,17 @@ class WhisperCog(dc.ext.commands.Cog):
             await message.delete()
 
     @app_commands.context_menu(name="Antworten")
-    async def reply(self, interaction: dc.Interaction, message: dc.Message, reply: str):
-        """Enable people to reply-whisper to messages"""
-        await interaction.response.defer(ephemeral=True)
-        channel = self.bot.get_channel(1397636825971032095)
-        if channel is None:
-            channel = await self.bot.fetch_channel(1397636825971032095)
+    async def reply_context(interaction: Interaction, message: dc.Message):
+        """Context menu for replying anonymously"""
+        # Only allow replies in the anonymous channel
         if message.channel.id != 1397636825971032095:
-            await interaction.followup.send("Du kannst das nur im anonymous channel machen", ephemeral=True)
+            await interaction.response.send_message(
+                "Du kannst das nur im anonymous channel machen",
+                ephemeral=True
+            )
             return
-        await message.reply(" \n" + "**ANONYM  **" + reply, allowed_mentions = dc.AllowedMentions(everyone=False))
+
+        await interaction.response.send_modal(ReplyModal(message))
 
     @app_commands.command(
         name="whisper", description="Sag etwas, aber bleib dabei anonym")
