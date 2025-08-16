@@ -26,6 +26,7 @@ async def setup_hook():
     await bot.add_cog(ucog.UgameCommands(bot))
     await bot.add_cog(wcog.WhisperCog(bot))
     await bot.add_cog(tcog.Tcg(bot))
+    bot.tree.add_command(wcog.reply_context)
 
 @tasks.loop(time=datetime.time(hour=4, minute=0, tzinfo=TZ))
 async def daily_job():

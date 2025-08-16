@@ -27,6 +27,19 @@ class ReplyModal(ui.Modal, title="Anonym antworten"):
         )
         await interaction.response.send_message("Antwort gesendet ✅", ephemeral=True)
 
+@app_commands.context_menu(name="Antworten")
+async def reply_context(interaction: Interaction, message: dc.Message):
+    """Context menu for replying anonymously"""
+    # Only allow replies in the anonymous channel
+    if message.channel.id != 1397636825971032095:
+        await interaction.response.send_message(
+            "Du kannst das nur im anonymous channel machen",
+            ephemeral=True
+        )
+        return
+
+    await interaction.response.send_modal(ReplyModal(message))
+
 class WhisperCog(dc.ext.commands.Cog):
     '''
     Cog for sending messages anonymously
@@ -48,19 +61,6 @@ class WhisperCog(dc.ext.commands.Cog):
                 await message.channel.send(attachment_url)
             await message.channel.send(message.content)
             await message.delete()
-
-    @app_commands.context_menu(name="Antworten")
-    async def reply_context(interaction: Interaction, message: dc.Message):
-        """Context menu for replying anonymously"""
-        # Only allow replies in the anonymous channel
-        if message.channel.id != 1397636825971032095:
-            await interaction.response.send_message(
-                "Du kannst das nur im anonymous channel machen",
-                ephemeral=True
-            )
-            return
-
-        await interaction.response.send_modal(ReplyModal(message))
 
     @app_commands.command(
         name="whisper", description="Sag etwas, aber bleib dabei anonym")
