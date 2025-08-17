@@ -704,12 +704,15 @@ class Tcg(dc.ext.commands.Cog):
         name="shop",
         description="Öffne den Kartenpackshop"
     )
-    @app_commands.guild_only()
     async def shop(self, interaction: dc.Interaction):
         '''display a shop embed with buttons to user to enable them to buy cards'''
         await interaction.response.defer()
 
         user_id = interaction.user.id
+
+        if interaction.guild is None:
+            await interaction.followup.send("Du darfst das nur in Bot-Spam machen")
+            return
 
         if not user_id in active_shops:
             async with active_shops_lock:
