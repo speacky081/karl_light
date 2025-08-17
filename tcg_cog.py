@@ -59,6 +59,7 @@ MAX_FILE_SIZE = 5 * 1024 * 1024 # 5MB
 ALLOWED_TYPES = {"image/png", "image/jpeg", "image/gif"}
 NUMBER_OF_TOKENGAMES = 1
 active_shops = {}
+active_shops_lock = asyncio.Lock()
 
 with open("ADMINID.txt", "r", encoding="utf-8") as file:
     ADMINID = int(file.readlines()[0])
@@ -221,8 +222,12 @@ def create_card(rarity: int) -> int:
     intelligence = random.choice(possible_values[rarity]["intelligence"])
 
     hp= np.random.normal(template[2], 15)
-    if hp < 1:
+    counter = 0
+    while hp < 1:
         hp = np.random.normal(template[2], 15)
+        counter += 1
+        if counter > 100:
+            hp = 1
 
     total_score = 0
     total_score += math.floor(max(math.log(hp)**2, 0))
@@ -353,7 +358,7 @@ class ShopView(dc.ui.View):
         await interaction.response.defer()
 
         if interaction.user.id != self.owner_id:
-            await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
+            await interaction.followup.send("Du hast den Shop nicht bestellt!", ephemeral=True)
             return
 
         for b in self.children:
@@ -706,7 +711,8 @@ class Tcg(dc.ext.commands.Cog):
         user_id = interaction.user.id
 
         if not user_id in active_shops:
-            active_shops[user_id] = {}
+            async with active_shops_lock:
+                active_shops[user_id] = {}
 
         con = sqlite3.connect("tcg.db")
         cur = con.cursor()
@@ -732,17 +738,22 @@ class Tcg(dc.ext.commands.Cog):
             color=dc.Color.blurple()
         )
 
-        shop_msg = await interaction.followup.send(embed=embed, view=view)
 
-        for message_id, channel_id in active_shops[user_id].items():
-            channel = await self.bot.fetch_channel(channel_id)
-            message = await channel.fetch_message(message_id)
+        async with active_shops_lock:
+            for message_id, channel_id in active_shops[user_id].items():
+                channel = self.bot.get_channel(channel_id)
+                message = await channel.fetch_message(message_id)
 
-            for b in message.view.children:
-                b.disabled = True
-            await message.edit(embed=embed, view=view)
+                new_view = ShopView(user_id, timeout=0)
+                for btn in new_view.children:
+                    btn.disabled = True
 
-        active_shops[user_id][shop_msg.id] = interaction.channel.id
+                await message.edit(embed=embed, view=new_view)
+
+            shop_msg = await interaction.followup.send(embed=embed, view=view)
+
+            active_shops[user_id] = {}
+            active_shops[user_id][shop_msg.id] = interaction.channel.id
 
         await asyncio.sleep(120)
         for btn in view.children:
