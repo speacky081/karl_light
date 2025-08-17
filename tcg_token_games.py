@@ -204,6 +204,7 @@ class ChallengeView(dc.ui.View):
     async def rotate_callback(self, interaction: dc.Interaction, button):
         """Assign the player to team rotate and give them a rotation degree amount"""
         user_id = interaction.user.id
+        global last_rot
 
         if user_id in rotation_player_group:
             await interaction.response.send_message(f"Du bist schon im Team `{translations[rotation_player_group[user_id]]}`", ephemeral=True)
@@ -226,6 +227,7 @@ class ChallengeView(dc.ui.View):
     async def zoom_callback(self, interaction: dc.Interaction, button):
         """Assign the player to team zoom and give them a zoom amount"""
         user_id = interaction.user.id
+        global last_zoom
 
         if user_id in rotation_player_group:
             await interaction.response.send_message(f"Du bist schon im Team `{translations[rotation_player_group[user_id]]}`", ephemeral=True)
