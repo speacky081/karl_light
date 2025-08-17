@@ -221,7 +221,7 @@ def create_card(rarity: int) -> int:
     strength = random.choice(possible_values[rarity]["strength"])
     intelligence = random.choice(possible_values[rarity]["intelligence"])
 
-    hp= np.random.normal(template[2], 15)
+    hp= math.floor(np.random.normal(template[2], 15))
     counter = 0
     while hp < 1:
         hp = np.random.normal(template[2], 15)
