@@ -40,7 +40,7 @@ import tcg_token_games as tcgames
 #     schwaeche TEXT,
 #     rarity INTEGER,
 #     file_path TEXT,
-#     total_score INTEGER,
+#     total_score INTEGER,  
 #     strength TEXT,
 #     intelligence TEXT,
 #     murder_role TEXT,
@@ -52,7 +52,7 @@ import tcg_token_games as tcgames
 #   tcgames for holding information about the token games
 #     start_time_unix INTEGER,
 #     playing INTEGER,
-#     type INTEGER                              is 0-whatever how many games there are
+#     type INTEGER                              is 1-however many games there are
 #     image TEXT
 
 MAX_FILE_SIZE = 5 * 1024 * 1024 # 5MB
@@ -700,6 +700,7 @@ class Tcg(dc.ext.commands.Cog):
         else:
             await interaction.followup.send("Du hast schon ein Konto")
 
+    @app_commands.guild_only()
     @tcg.command(
         name="shop",
         description="Öffne den Kartenpackshop"
