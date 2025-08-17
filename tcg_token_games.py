@@ -373,6 +373,10 @@ async def check(interaction: dc.Interaction):
             UPDATE user_tokens
             SET tokens = tokens + 1;
         """)
+        cur.execute("""
+            UPDATE tcgames
+            SET playing = ?, image = ?
+        """, (0, ""))
         con.commit()
         con.close()
         return
