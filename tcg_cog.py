@@ -220,12 +220,12 @@ def create_card(rarity: int) -> int:
     strength = random.choice(possible_values[rarity]["strength"])
     intelligence = random.choice(possible_values[rarity]["intelligence"])
 
-    template[2] = np.random.normal(template[2], 15)
-    if template[2] < 1:
-        template[2] = np.random.normal(template[2], 15)
+    hp= np.random.normal(template[2], 15)
+    if hp < 1:
+        hp = np.random.normal(template[2], 15)
 
     total_score = 0
-    total_score += math.floor(max(math.log(template[2])**2), 0)
+    total_score += math.floor(max(math.log(hp)**2, 0))
     total_score += math.floor(math.exp(rarity-1))
 
     match strength:
@@ -246,7 +246,7 @@ def create_card(rarity: int) -> int:
 
     new_card = {
         "name": template[1],
-        "hp": template[2],
+        "hp": hp,
         "staerke": template[3],
         "schwaeche": template[4],
         "rarity": rarity,
@@ -734,8 +734,7 @@ class Tcg(dc.ext.commands.Cog):
 
         shop_msg = await interaction.followup.send(embed=embed, view=view)
 
-        for message_id in active_shops[user_id]:
-            channel_id = active_shops[user_id][message_id]
+        for message_id, channel_id in active_shops[user_id].items():
             channel = await self.bot.fetch_channel(channel_id)
             message = await channel.fetch_message(message_id)
 
@@ -743,7 +742,7 @@ class Tcg(dc.ext.commands.Cog):
                 b.disabled = True
             await message.edit(embed=embed, view=view)
 
-        active_shops[user_id][interaction.channel.id] = shop_msg.id
+        active_shops[user_id][shop_msg.id] = interaction.channel.id
 
         await asyncio.sleep(120)
         for btn in view.children:
@@ -1085,7 +1084,7 @@ class Tcg(dc.ext.commands.Cog):
             return
 
         if current_time - start_time < 172800:           # 48h
-            timedelta = str(datetime.timedelta(seconds=current_time-start_time))
+            timedelta = str(datetime.timedelta(seconds=172800 - (current_time-start_time)))
             await interaction.followup.send(f"Es ist noch nicht so weit. Warte {timedelta} für die nächste Herausforderung")
             return
 
