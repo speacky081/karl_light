@@ -424,7 +424,7 @@ class ShopView(dc.ui.View):
         '''generate an uncommon booster pack'''
         await interaction.response.defer()
         if interaction.user.id != self.owner_id:
-            await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
+            await interaction.followup.send("Du hast den Shop nicht bestellt!", ephemeral=True)
             return
 
         for b in self.children:
@@ -490,7 +490,7 @@ class ShopView(dc.ui.View):
         '''generate a rare booster pack'''
         await interaction.response.defer()
         if interaction.user.id != self.owner_id:
-            await interaction.followup.send_message("Du hast den Shop nicht bestellt!", ephemeral=True)
+            await interaction.followup.send("Du hast den Shop nicht bestellt!", ephemeral=True)
             return
 
         for b in self.children:
