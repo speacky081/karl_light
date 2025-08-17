@@ -212,8 +212,10 @@ class ChallengeView(dc.ui.View):
         rotation_player_group[user_id] = "rot"
         if last_rot == 8:
             rotation_player_value[user_id] = 3
+            last_rot = 3
         else:
             rotation_player_value[user_id] = 8
+            last_rot = 8
             
         rview = RotateView(user_id)
         await interaction.response.send_message(f"<@{user_id}> wurde Team `{translations[rotation_player_group[user_id]]}` zugeteilt und kann `{rotation_player_value[user_id]*10}` Grad drehen")
@@ -232,8 +234,10 @@ class ChallengeView(dc.ui.View):
         rotation_player_group[user_id] = "zom"
         if last_zoom == 8:
             rotation_player_value[user_id] = 3
+            last_zoom = 3
         else:
             rotation_player_value[user_id] = 8
+            last_zoom = 8
         zview = ZoomView(user_id)
         await interaction.response.send_message(f"<@{user_id}> wurde Team `{translations[rotation_player_group[user_id]]}` zugeteilt und kann `{rotation_player_value[user_id]}`-fach zoomen")
         button_msg = await interaction.followup.send(f"Hier kannst du weitermachen <@{user_id}>", view=zview)
