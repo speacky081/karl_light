@@ -700,11 +700,11 @@ class Tcg(dc.ext.commands.Cog):
         else:
             await interaction.followup.send("Du hast schon ein Konto")
 
-    @app_commands.guild_only()
     @tcg.command(
         name="shop",
         description="Öffne den Kartenpackshop"
     )
+    @app_commands.guild_only()
     async def shop(self, interaction: dc.Interaction):
         '''display a shop embed with buttons to user to enable them to buy cards'''
         await interaction.response.defer()
