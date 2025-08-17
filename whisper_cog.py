@@ -63,8 +63,9 @@ class WhisperCog(dc.ext.commands.Cog):
                     await message.delete()
                     return
             except IndexError:
-                await message.channel.send(message.content)
-                await message.delete()
+                pass    
+            await message.channel.send(" \n" + "**ANONYM  **" + message.content, allowed_mentions = dc.AllowedMentions(everyone=False))
+            await message.delete()
 
     @app_commands.command(
         name="whisper", description="Sag etwas, aber bleib dabei anonym")
