@@ -1095,8 +1095,8 @@ class Tcg(dc.ext.commands.Cog):
             await interaction.followup.send("Es läuft schon ein Spiel. Du kannst da mitspielen")
             return
 
-        if current_time - start_time < 172800:           # 48h
-            timedelta = str(datetime.timedelta(seconds=172800 - (current_time-start_time)))
+        if current_time - start_time < 129600:           # 36h
+            timedelta = str(datetime.timedelta(seconds=129600 - (current_time-start_time)))
             await interaction.followup.send(f"Es ist noch nicht so weit. Warte {timedelta} für die nächste Herausforderung")
             return
 
