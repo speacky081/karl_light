@@ -40,7 +40,7 @@ import tcg_token_games as tcgames
 #     schwaeche TEXT,
 #     rarity INTEGER,
 #     file_path TEXT,
-#     total_score INTEGER,  
+#     total_score INTEGER,
 #     strength TEXT,
 #     intelligence TEXT,
 #     murder_role TEXT,
@@ -223,11 +223,20 @@ def create_card(rarity: int) -> int:
 
     hp= math.floor(np.random.normal(template[2], 15))
     counter = 0
-    while hp < 1:
-        hp = np.random.normal(template[2], 15)
-        counter += 1
-        if counter > 100:
-            hp = 1
+    
+    number = random.randint(1, 37691)
+    if number == 1:
+        while hp < 1:
+            hp = np.random.normal(template[2], 15)
+            counter += 1
+            if counter > 100:
+                hp = 1
+    else:
+        while hp < 1:
+            hp = math.floor(np.random.normal(template[2], 15))
+            counter += 1
+            if counter > 100:
+                hp = 1
 
     total_score = 0
     total_score += math.floor(max(math.log(hp)**2, 0))
@@ -741,7 +750,6 @@ class Tcg(dc.ext.commands.Cog):
             description=f"Deine Token: `{player_tokens}`",
             color=dc.Color.blurple()
         )
-
 
         async with active_shops_lock:
             for message_id, channel_id in active_shops[user_id].items():
