@@ -223,7 +223,7 @@ def create_card(rarity: int) -> int:
 
     hp= math.floor(np.random.normal(template[2], 15))
     counter = 0
-    
+
     number = random.randint(1, 37691)
     if number == 1:
         while hp < 1:

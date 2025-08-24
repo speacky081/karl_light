@@ -371,7 +371,7 @@ async def check(interaction: dc.Interaction):
         ]
     )
 
-    if (rotation_state["rot"] % 36 == target_state["rot"] or rotation_state["rot"] % 36 == -target_state["rot"]) and rotation_state["zom"] == target_state["zom"]:
+    if (rotation_state["rot"] % 36 == target_state["rot"] % 36 or rotation_state["rot"] % 36 == -target_state["rot"] % 36) and rotation_state["zom"] == target_state["zom"]:
         await interaction.followup.send("IHR HABTS GESCHAFFT. IHR ALLE BEKOMMT EIN TOKEN!")
         con = sqlite3.connect("tcg.db")
         cur = con.cursor()
